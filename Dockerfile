@@ -1,6 +1,7 @@
-FROM aergus/latex
+FROM blang/latex
 
-RUN wget "http://tubslatex.ejoerns.de/1.1.0/tubslatex_1.1.0.tds.zip" \
+RUN apt-get update -q && apt-get install -qy wget && rm -rf /var/lib/apt/lists/* \
+  && wget "http://tubslatex.ejoerns.de/1.1.0/tubslatex_1.1.0.tds.zip" \
   && unzip -d /usr/local/share/texmf/ tubslatex_1.1.0.tds.zip \
   && rm tubslatex_1.1.0.tds.zip \
   && mktexlsr \
