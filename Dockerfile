@@ -1,10 +1,20 @@
-FROM blang/latex
+FROM aergus/latex
 
-RUN apt-get update -q && apt-get install -qy wget && rm -rf /var/lib/apt/lists/* \
-  && wget "http://tubslatex.ejoerns.de/1.1.0/tubslatex_1.1.0.tds.zip" \
-  && unzip -d /usr/local/share/texmf/ tubslatex_1.1.0.tds.zip \
-  && rm tubslatex_1.1.0.tds.zip \
-  && mktexlsr \
-  && updmap-sys --nomkmap --nohash --enable Map=NexusProSans.map \
-  && updmap-sys --nomkmap --nohash --enable Map=NexusProSerif.map \
-  && updmap-sys
+RUN apt-get update -q \
+    && apt-get -qy install curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN \
+    # Get latest release tag
+    curl "https://gitlab.ibr.cs.tu-bs.de/api/v4/projects/tubslatex%2Ftubslatex/releases" --output /tmp/releases \
+    # alpha or full release
+    && tagname=$(sed -E 's;^\[\{"name":"([0-9.alpha-]+)".*$;\1;g' /tmp/releases) \
+    #
+    # Get installer link of release
+    && curl "https://gitlab.ibr.cs.tu-bs.de/api/v4/projects/tubslatex%2Ftubslatex/releases/$tagname" --output /tmp/releases \
+    && installerurl=$(sed -E 's;.*"name":"Installations-Skript \(sh\)","url":"([a-z0-9:/\.=\?_-]+)",.*;\1;g' /tmp/releases) \
+    && rm /tmp/releases \
+    && curl $installerurl --output /tmp/tubslatex_installer
+
+RUN sh /tmp/tubslatex_installer -d --noninteractive --latest-stable --del-local-font --getnonfreefonts \
+    && rm /tmp/tubslatex_installer
